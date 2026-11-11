@@ -8,17 +8,16 @@ from duckduckgo_search import DDGS
 from gtts import gTTS
 import io
 
-app = FastAPI(title="Apex AI Official GenAI")
+app = FastAPI(title="Apex AI Gemini Platform")
 templates = Jinja2Templates(directory="templates")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-# Official Google GenAI Client
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 SYSTEM_PROMPT = (
     "Maqaan kee Apex AI jedhama. Ati gargaaraa AI dandeettii ol'aanaa qabu, "
-    "afaanota addunyaa fi Afaan Oromoo guutummaatti hubatu, barreeffama, sagalee, "
-    "suuraa fi vidiyoo xiinxalee deebii sirrii fi saffisa olaanaadhaan kennuudha."
+    "afaanota addunyaa hunda fi Afaan Oromoo guutummaatti hubatu, barreeffama, sagalee, "
+    "suuraa fi vidiyoo xiinxalee deebii sirrii, qulqullina qabu fi saffisa olaanaadhaan kennuudha."
 )
 
 def search_web(query: str):
@@ -51,9 +50,9 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Official Google GenAI SDK call using gemini-2.5-flash
+        # Google Gemini Model - gemini-3.8-flash (Latest & Stable)
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.8-flash',
             contents=full_prompt,
         )
         
@@ -84,7 +83,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
     try:
         contents = await file.read()
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.8-flash',
             contents=[
                 prompt,
                 {"mime_type": file.content_type, "data": contents}
