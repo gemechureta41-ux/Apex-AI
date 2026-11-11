@@ -30,10 +30,14 @@ def search_web(query: str):
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.head("/")
+async def head_root():
+    return {"status": "alive"}
+
 @app.post("/api/chat")
 async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False)):
-    if not OPENAI_API_KEY:
-        return JSONResponse({"status": "error", "message": "OPENAI_API_KEY Render irratti hin konfiguramne!"}, status_code=500)
+    if not client:
+        return JSONResponse({"status": "error", "message": "OPENAI_API_KEY Render Environment Variables irratti hin jiru!"}, status_code=500)
     
     try:
         context = ""
@@ -44,6 +48,7 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = prompt + context
 
+        # OpenAI v1.0.0+ Chat Completion Syntax
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -55,7 +60,7 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
         
         reply_text = response.choices[0].message.content
 
-        # Text-to-Speech Generation
+        # OpenAI v1.0.0+ Text-to-Speech Syntax
         speech_response = client.audio.speech.create(
             model="tts-1",
             voice="alloy",
@@ -69,5 +74,52 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
             "audio": audio_base64
         })
     except Exception as e:
-        # Error sirriitti print gochuuf akka Internal Server Error qofti hin baane
         return JSONResponse({"status": "error", "message": f"Server Error: {str(e)}"}, status_code=500)
+
+@app.post("/api/vision")
+async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file: UploadFile = File(...)):
+    if not client:
+        return JSONResponse({"status": "error", "message": "OPENAI_API_KEY hin argamne!"}, status_code=500)
+    try:
+        contents = await file.read()
+        base64_image = base64.b64encode(contents).decode('utf-8')
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                        }
+                    ]
+                }
+            ]
+        )
+        return JSONResponse({"status": "success", "response": response.choices[0].message.content})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+@app.post("/api/transcribe")
+async def transcribe_endpoint(file: UploadFile = File(...)):
+    if not client:
+        return JSONResponse({"status": "error", "message": "OPENAI_API_KEY hin argamne!"}, status_code=500)
+    try:
+        temp_filename = f"temp_{file.filename}"
+        with open(temp_filename, "wb") as f:
+            f.write(await file.read())
+            
+        with open(temp_filename, "rb") as audio_file:
+            transcript = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file
+            )
+            
+        os.remove(temp_filename)
+        return JSONResponse({"status": "success", "transcript": transcript.text})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
