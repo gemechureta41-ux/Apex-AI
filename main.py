@@ -1,14 +1,11 @@
 import os
-import base64
 from fastapi import FastAPI, Request, File, UploadFile, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from google import genai
 from duckduckgo_search import DDGS
-from gtts import gTTS
-import io
 
-app = FastAPI(title="Apex AI Gemini Platform")
+app = FastAPI(title="Apex AI Ultra Fast")
 templates = Jinja2Templates(directory="templates")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -16,8 +13,8 @@ client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 SYSTEM_PROMPT = (
     "Maqaan kee Apex AI jedhama. Ati gargaaraa AI dandeettii ol'aanaa qabu, "
-    "afaanota addunyaa hunda fi Afaan Oromoo guutummaatti hubatu, barreeffama, sagalee, "
-    "suuraa fi vidiyoo xiinxalee deebii sirrii, qulqullina qabu fi saffisa olaanaadhaan kennuudha."
+    "afaanota addunyaa hunda fi Afaan Oromoo guutummaatti hubatu, barreeffama, "
+    "suuraa fi vidiyoo xiinxalee deebii sirrii, qulqullina qabu fi saffisa sekondii tokkoo keessatti kennuudha."
 )
 
 def search_web(query: str):
@@ -50,7 +47,7 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Google Gemini Model - gemini-3.8-flash (Latest & Stable)
+        # Google Gemini Model - gemini-3.8-flash (Ultra Fast Response)
         response = client.models.generate_content(
             model='gemini-3.8-flash',
             contents=full_prompt,
@@ -58,20 +55,11 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
         
         reply_text = response.text
 
-        audio_base64 = ""
-        try:
-            tts = gTTS(text=reply_text[:400], lang='en')
-            audio_fp = io.BytesIO()
-            tts.write_to_fp(audio_fp)
-            audio_fp.seek(0)
-            audio_base64 = base64.b64encode(audio_fp.read()).decode('utf-8')
-        except Exception:
-            pass
-
+        # Audio baasuu dhiisuun saffisa dhibbeentaa 100tti oolchuu (Instant Response)
         return JSONResponse({
             "status": "success",
             "response": reply_text,
-            "audio": audio_base64
+            "audio": ""
         })
     except Exception as e:
         return JSONResponse({"status": "error", "message": f"Server Error: {str(e)}"}, status_code=500)
