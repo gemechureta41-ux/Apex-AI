@@ -84,9 +84,9 @@
             inputField.value = '';
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // Loading message (Instant indicator)
+            // Loading message
             const loadingId = 'loading-' + Date.now();
-            messagesContainer.innerHTML += `<div class="message ai" id="${loadingId}"><strong>Apex AI:</strong> Generating...</div>`;
+            messagesContainer.innerHTML += `<div class="message ai" id="${loadingId}"><strong>Apex AI:</strong> Typing...</div>`;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
             try {
@@ -100,7 +100,8 @@
                 });
 
                 const data = await response.json();
-                document.getElementById(loadingId).remove();
+                const loadingElem = document.getElementById(loadingId);
+                if (loadingElem) loadingElem.remove();
 
                 if (data.status === 'success') {
                     messagesContainer.innerHTML += `<div class="message ai"><strong>Apex AI:</strong> ${formatText(data.response)}</div>`;
@@ -108,8 +109,9 @@
                     messagesContainer.innerHTML += `<div class="message ai" style="color: #ff8b8b;"><strong>Error:</strong> ${data.message}</div>`;
                 }
             } catch (error) {
-                document.getElementById(loadingId).remove();
-                messagesContainer.innerHTML += `<div class="message ai" style="color: #ff8b8b;"><strong>Error:</strong> Connection failed.</div>`;
+                const loadingElem = document.getElementById(loadingId);
+                if (loadingElem) loadingElem.remove();
+                messagesContainer.innerHTML += `<div class="message ai" style="color: #ff8b8b;"><strong>Error:</strong> Connection failed. Please try again.</div>`;
             }
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
