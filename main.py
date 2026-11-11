@@ -50,9 +50,9 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = prompt + context
 
-        # Groq Llama 3.1 Model (Free & Fast)
+        # Groq Model Asii jijjiirameera (llama-3.3-70b-versatile)
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": full_prompt}
@@ -62,7 +62,6 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
         
         reply_text = response.choices[0].message.content
 
-        # Free Text-to-Speech using gTTS
         tts = gTTS(text=reply_text, lang='en')
         audio_fp = io.BytesIO()
         tts.write_to_fp(audio_fp)
@@ -85,7 +84,6 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
         contents = await file.read()
         base64_image = base64.b64encode(contents).decode('utf-8')
         
-        # Groq Vision Model (Llama 3.2 Vision)
         response = client.chat.completions.create(
             model="llama-3.2-11b-vision-preview",
             messages=[
