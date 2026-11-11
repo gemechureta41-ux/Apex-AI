@@ -28,7 +28,8 @@ def search_web(query: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    # Starlette version haaraaf sirreeffama TemplateResponse
+    return templates.TemplateResponse(request, "index.html")
 
 @app.head("/")
 async def head_root():
@@ -48,7 +49,6 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = prompt + context
 
-        # OpenAI v1.0.0+ Chat Completion Syntax
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -60,7 +60,6 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
         
         reply_text = response.choices[0].message.content
 
-        # OpenAI v1.0.0+ Text-to-Speech Syntax
         speech_response = client.audio.speech.create(
             model="tts-1",
             voice="alloy",
