@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex AI Platform</title>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #161b22;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        h1 { color: #d4af37; text-align: center; }
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #30363d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background: #0d1117;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background: #21262d;
+            color: #fff;
+        }
+        button {
+            background: #d4af37;
+            color: #000;
+            font-weight: bold;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover { background: #f3c623; }
+        .options {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .upload-section {
+            display: flex;
+            gap: 15px;
+            border-top: 1px solid #30363d;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>APEX AI WEB PLATFORM</h1>
+        
+        <div class="chat-box" id="chatBox">
+            <p><strong>Apex AI:</strong> Akkam! Maqaan kiyya Apex AI jedhama. Barreeffaman, sagaleedhaan, suuraa ykn Web Search fayyadamuun gaaffii kee naaf dhiyeessuu dandeessa.</p>
+        </div>
+
+        <div class="options">
+            <label><input type="checkbox" id="useSearch" checked> Google/Web Search fayyadami</label>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="userInput" placeholder="Gaaffii kee asitti barreessi..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendChat()">Ergi</button>
+        </div>
+
+        <div class="upload-section">
+            <div>
+                <label>Suuraa Upload Godhi:</label><br>
+                <input type="file" id="imageInput" accept="image/*">
+                <button onclick="uploadImage()">Suuraa Xiinxali</button>
+            </div>
+            <div>
+                <label>Audio/Video Upload Godhi:</label><br>
+                <input type="file" id="mediaInput" accept="audio/*,video/*">
+                <button onclick="uploadMedia()">Sagalee/Video Dubbisi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendChat();
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('userInput');
+            const chatBox = document.getElementById('chatBox');
+            const useSearch = document.getElementById('useSearch').checked;
+            if(!input.value) return;
+
+            const prompt = input.value;
+            chatBox.innerHTML += `<p><strong>Ati:</strong> ${prompt}</p>`;
+            input.value = '';
+
+            const formData = new FormData();
+            formData.append('prompt', prompt);
+            formData.append('use_search', useSearch);
+
+            const res = await fetch('/api/chat', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if(data.status === 'success') {
+                chatBox.innerHTML += `<p><strong>Apex AI:</strong> ${data.response}</p>`;
+                
+                // Sagalee deebii taphachiisuu (Play Audio TTS)
+                if(data.audio) {
+                    const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
+                    audio.play();
+                }
+                
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        async function uploadImage() {
+            const fileInput = document.getElementById('imageInput');
+            const chatBox = document.getElementById('chatBox');
+            if(!fileInput.files[0]) return;
+
+            chatBox.innerHTML += `<p><em>Suuraa upload gochaa jirta...</em></p>`;
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const res = await fetch('/api/vision', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if(data.status === 'success') {
+                chatBox.innerHTML += `<p><strong>Apex AI (Vision):</strong> ${data.response}</p>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        async function uploadMedia() {
+            const fileInput = document.getElementById('mediaInput');
+            const chatBox = document.getElementById('chatBox');
+            if(!fileInput.files[0]) return;
+
+            chatBox.innerHTML += `<p><em>Media (Audio/Video) dubbisaa jira...</em></p>`;
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if(data.status === 'success') {
+                chatBox.innerHTML += `<p><strong>Apex AI (Transcription):</strong> ${data.transcript}</p>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
