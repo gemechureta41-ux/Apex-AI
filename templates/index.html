@@ -1,96 +1,251 @@
-import os
-import base64
-from fastapi import FastAPI, Request, File, UploadFile, Form
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from google import genai
-from duckduckgo_search import DDGS
-from gtts import gTTS
-import io
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex AI - Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #131314;
+            --sidebar-color: #1e1f20;
+            --chat-bg: #1e1f20;
+            --input-bg: #282a2c;
+            --text-color: #e3e3e3;
+            --accent-color: #c4c7c5;
+            --gold-color: #d4af37;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* Sidebar styling ala Gemini */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-right: 1px solid #333;
+        }
+        .sidebar h2 {
+            color: var(--gold-color);
+            font-size: 22px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .new-chat-btn {
+            background: #282a2c;
+            color: var(--text-color);
+            border: 1px solid #444;
+            padding: 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: left;
+            transition: 0.2s;
+        }
+        .new-chat-btn:hover { background: #3c4043; }
 
-app = FastAPI(title="Apex AI Gemini Platform")
-templates = Jinja2Templates(directory="templates")
+        /* Main Chat Area */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chat-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--gold-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+        .message {
+            padding: 15px 20px;
+            border-radius: 18px;
+            max-width: 80%;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .message.user {
+            background-color: #2b2d31;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message.ai {
+            background-color: var(--chat-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #333;
+        }
+        .message.ai strong { color: var(--gold-color); }
 
-# Google Gemini API Key
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+        /* Input Area ala Gemini */
+        .input-area-wrapper {
+            background-color: var(--input-bg);
+            border-radius: 28px;
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid #444;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+        }
+        .input-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 16px;
+            resize: none;
+            outline: none;
+            max-height: 120px;
+            padding-top: 6px;
+        }
+        .send-btn {
+            background: var(--gold-color);
+            color: #000;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .send-btn:hover { background: #f3c623; }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--accent-color);
+            border-top: 1px solid #333;
+            padding-top: 8px;
+        }
+        .toolbar label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    </style>
+</head>
+<body>
 
-SYSTEM_PROMPT = (
-    "Maqaan kee Apex AI jedhama. Ati gargaaraa AI dandeettii ol'aanaa qabu, "
-    "afaanota addunyaa fi Afaan Oromoo guutummaatti hubatu, barreeffama, sagalee, "
-    "suuraa fi vidiyoo xiinxalee deebii sirrii fi qulqullina qabu kennuudha."
-)
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>APEX AI</h2>
+        <button class="new-chat-btn" onclick="location.reload()">+ Marii Haaraa</button>
+        <div style="font-size: 13px; color: #888; margin-top: auto;">
+            <p><strong>Version:</strong> 2.0 Pro</p>
+            <p><strong>Developer:</strong> Gemechu Reta</p>
+        </div>
+    </div>
 
-def search_web(query: str):
-    try:
-        with DDGS() as ddgs:
-            results = [r['body'] for r in ddgs.text(query, max_results=3)]
-            return " ".join(results)
-    except Exception:
-        return ""
-
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse(request, "index.html")
-
-@app.head("/")
-async def head_root():
-    return {"status": "alive"}
-
-@app.post("/api/chat")
-async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False)):
-    if not client:
-        return JSONResponse({"status": "error", "message": "GEMINI_API_KEY Render Environment Variables irratti hin jiru!"}, status_code=500)
-    
-    try:
-        context = ""
-        if use_search:
-            search_results = search_web(prompt)
-            if search_results:
-                context = f"\n\nOdeeffannoo dabalataa Marsariitii irraa argame:\n{search_results}"
-
-        full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
-
-        # Google Gemini Model (gemini-2.5-flash) - Fast & Free
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=full_prompt,
-        )
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="chat-header">Apex AI Web Dashboard</div>
         
-        reply_text = response.text
+        <div class="chat-box" id="chatBox">
+            <div class="message ai">
+                <strong>Apex AI:</strong> Akkam! Maqaan kiyya Apex AI jedhama. Barreeffaman, sagaleedhaan, suuraa ykn Web Search fayyadamuun gaaffii kee naaf dhiyeessuu dandeessa. Har'a maaliin si gargaaruu?
+            </div>
+        </div>
 
-        tts = gTTS(text=reply_text, lang='en')
-        audio_fp = io.BytesIO()
-        tts.write_to_fp(audio_fp)
-        audio_fp.seek(0)
-        audio_base64 = base64.b64encode(audio_fp.read()).decode('utf-8')
+        <div>
+            <div class="input-area-wrapper">
+                <div class="input-box">
+                    <textarea id="userInput" rows="1" placeholder="Gaaffii kee asitti barreessi..." onkeypress="handleKeyPress(event)"></textarea>
+                    <button class="send-btn" onclick="sendChat()">➔</button>
+                </div>
+                <div class="toolbar">
+                    <label><input type="checkbox" id="useSearch" checked> Google/Web Search fayyadami</label>
+                    <span style="font-size: 12px;">GPT-4o Engine</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        return JSONResponse({
-            "status": "success",
-            "response": reply_text,
-            "audio": audio_base64
-        })
-    except Exception as e:
-        return JSONResponse({"status": "error", "message": f"Server Error: {str(e)}"}, status_code=500)
+    <script>
+        function handleKeyPress(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChat();
+            }
+        }
 
-@app.post("/api/vision")
-async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file: UploadFile = File(...)):
-    if not client:
-        return JSONResponse({"status": "error", "message": "GEMINI_API_KEY hin argamne!"}, status_code=500)
-    try:
-        contents = await file.read()
-        
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                prompt,
-                {"mime_type": file.content_type, "data": contents}
-            ]
-        )
-        return JSONResponse({"status": "success", "response": response.text})
-    except Exception as e:
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+        async function sendChat() {
+            const input = document.getElementById('userInput');
+            const chatBox = document.getElementById('chatBox');
+            const useSearch = document.getElementById('useSearch').checked;
+            const prompt = input.value.trim();
+            
+            if(!prompt) return;
 
-@app.post("/api/transcribe")
-async def transcribe_endpoint(file: UploadFile = File(...)):
-    return JSONResponse({"status": "success", "transcript": "Audio transcription wajjin walqabatee tajaajilli kun yeroof Google irraa hojjeta."})
+            // User Message Appending
+            chatBox.innerHTML += `<div class="message user">${prompt}</div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Loading indicator
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `<div class="message ai" id="${loadingId}"><em>Apex AI yaadaa jira...</em></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            const formData = new FormData();
+            formData.append('prompt', prompt);
+            formData.append('use_search', useSearch);
+
+            try {
+                const res = await fetch('/api/chat', { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                const loadingElement = document.getElementById(loadingId);
+                if(loadingElement) loadingElement.remove();
+
+                if(data.status === 'success') {
+                    chatBox.innerHTML += `<div class="message ai"><strong>Apex AI:</strong> ${data.response}</div>`;
+                    
+                    if(data.audio) {
+                        const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
+                        audio.play();
+                    }
+                } else {
+                    chatBox.innerHTML += `<div class="message ai" style="color: #ff6b6b;"><strong>Dogoggora:</strong> ${data.message}</div>`;
+                }
+            } catch (err) {
+                const loadingElement = document.getElementById(loadingId);
+                if(loadingElement) loadingElement.remove();
+                chatBox.innerHTML += `<div class="message ai" style="color: #ff6b6b;"><strong>Dogoggora Server:</strong> Walqunnamtiirratti rakkoon uumameera.</div>`;
+            }
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
