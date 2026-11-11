@@ -50,15 +50,14 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Gemini Flash Model - Ultra Fast Response
+        # Modelii sirrii fi saffisa qabu (gemini-1.5-flash)
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             contents=full_prompt,
         )
         
         reply_text = response.text
 
-        # Sagalee saffisaan qopheessuu (Error yoo uumames chat akka hin dhaabneef try-except keessatti)
         audio_base64 = ""
         try:
             tts = gTTS(text=reply_text[:400], lang='en')
@@ -84,7 +83,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
     try:
         contents = await file.read()
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             contents=[
                 prompt,
                 {"mime_type": file.content_type, "data": contents}
