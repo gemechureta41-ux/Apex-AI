@@ -65,7 +65,6 @@
                 <button class="send-btn" onclick="sendMessage()">➔</button>
             </div>
             <div class="options">
-                <!-- Unchecked by default to ensure instant blazing fast response -->
                 <label><input type="checkbox" id="useSearch"> Enable Google/Web Search</label>
             </div>
         </div>
@@ -85,9 +84,9 @@
             inputField.value = '';
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // Loading message
+            // Loading message (Instant indicator)
             const loadingId = 'loading-' + Date.now();
-            messagesContainer.innerHTML += `<div class="message ai" id="${loadingId}"><strong>Apex AI:</strong> Thinking...</div>`;
+            messagesContainer.innerHTML += `<div class="message ai" id="${loadingId}"><strong>Apex AI:</strong> Generating...</div>`;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
             try {
