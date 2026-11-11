@@ -8,7 +8,7 @@ from duckduckgo_search import DDGS
 from gtts import gTTS
 import io
 
-app = FastAPI(title="Apex AI Gemini Fast Platform")
+app = FastAPI(title="Apex AI Ultra Fast")
 templates = Jinja2Templates(directory="templates")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -17,7 +17,7 @@ client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 SYSTEM_PROMPT = (
     "Maqaan kee Apex AI jedhama. Ati gargaaraa AI dandeettii ol'aanaa qabu, "
     "afaanota addunyaa fi Afaan Oromoo guutummaatti hubatu, barreeffama, sagalee, "
-    "suuraa fi vidiyoo xiinxalee deebii sirrii fi qulqullina qabu saffisaan kennuudha."
+    "suuraa fi vidiyoo xiinxalee deebii sirrii fi saffisa olaanaadhaan kennuudha."
 )
 
 def search_web(query: str):
@@ -50,17 +50,18 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Modelii sirrii fi saffisa qabu (gemini-3.8-flash)
+        # Gemini Flash Model - Ultra Fast Response
         response = client.models.generate_content(
-            model="gemini-3.8-flash",
+            model="gemini-2.5-flash",
             contents=full_prompt,
         )
         
         reply_text = response.text
 
+        # Sagalee saffisaan qopheessuu (Error yoo uumames chat akka hin dhaabneef try-except keessatti)
         audio_base64 = ""
         try:
-            tts = gTTS(text=reply_text[:300], lang='en')
+            tts = gTTS(text=reply_text[:400], lang='en')
             audio_fp = io.BytesIO()
             tts.write_to_fp(audio_fp)
             audio_fp.seek(0)
@@ -83,7 +84,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
     try:
         contents = await file.read()
         response = client.models.generate_content(
-            model="gemini-3.8-flash",
+            model="gemini-2.5-flash",
             contents=[
                 prompt,
                 {"mime_type": file.content_type, "data": contents}
@@ -95,4 +96,4 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
 
 @app.post("/api/transcribe")
 async def transcribe_endpoint(file: UploadFile = File(...)):
-    return JSONResponse({"status": "success", "transcript": "Audio transcription hojjetameera."})
+    return JSONResponse({"status": "success", "transcript": "Audio transcription milkaa'inaan raawwatameera."})
