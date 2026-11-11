@@ -3,170 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex AI Platform</title>
+    <title>Apex AI - Dashboard</title>
     <style>
-        body {
-            background-color: #0d1117;
-            color: #c9d1d9;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
+        :root {
+            --bg-color: #131314;
+            --sidebar-color: #1e1f20;
+            --chat-bg: #1e1f20;
+            --input-bg: #282a2c;
+            --text-color: #e3e3e3;
+            --accent-color: #c4c7c5;
+            --gold-color: #d4af37;
         }
-        .container {
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* Sidebar styling ala Gemini */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-right: 1px solid #333;
+        }
+        .sidebar h2 {
+            color: var(--gold-color);
+            font-size: 22px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .new-chat-btn {
+            background: #282a2c;
+            color: var(--text-color);
+            border: 1px solid #444;
+            padding: 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: left;
+            transition: 0.2s;
+        }
+        .new-chat-btn:hover { background: #3c4043; }
+
+        /* Main Chat Area */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
             max-width: 900px;
             margin: 0 auto;
-            background: #161b22;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            padding: 20px;
         }
-        h1 { color: #d4af37; text-align: center; }
+        .chat-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--gold-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
         .chat-box {
-            height: 400px;
+            flex: 1;
             overflow-y: auto;
-            border: 1px solid #30363d;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            background: #0d1117;
-        }
-        .input-group {
+            padding: 20px;
             display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+        .message {
+            padding: 15px 20px;
+            border-radius: 18px;
+            max-width: 80%;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .message.user {
+            background-color: #2b2d31;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message.ai {
+            background-color: var(--chat-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #333;
+        }
+        .message.ai strong { color: var(--gold-color); }
+
+        /* Input Area ala Gemini */
+        .input-area-wrapper {
+            background-color: var(--input-bg);
+            border-radius: 28px;
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
+            border: 1px solid #444;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             margin-bottom: 15px;
         }
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #30363d;
-            background: #21262d;
-            color: #fff;
-        }
-        button {
-            background: #d4af37;
-            color: #000;
-            font-weight: bold;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover { background: #f3c623; }
-        .options {
-            margin-bottom: 10px;
+        .input-box {
             display: flex;
-            gap: 15px;
             align-items: center;
+            gap: 10px;
         }
-        .upload-section {
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 16px;
+            resize: none;
+            outline: none;
+            max-height: 120px;
+            padding-top: 6px;
+        }
+        .send-btn {
+            background: var(--gold-color);
+            color: #000;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
             display: flex;
-            gap: 15px;
-            border-top: 1px solid #30363d;
-            padding-top: 15px;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
         }
+        .send-btn:hover { background: #f3c623; }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--accent-color);
+            border-top: 1px solid #333;
+            padding-top: 8px;
+        }
+        .toolbar label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>APEX AI WEB PLATFORM</h1>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>APEX AI</h2>
+        <button class="new-chat-btn" onclick="location.reload()">+ Marii Haaraa</button>
+        <div style="font-size: 13px; color: #888; margin-top: auto;">
+            <p><strong>Version:</strong> 2.0 Pro</p>
+            <p><strong>Developer:</strong> Gemechu Reta</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="chat-header">Apex AI Web Dashboard</div>
         
         <div class="chat-box" id="chatBox">
-            <p><strong>Apex AI:</strong> Akkam! Maqaan kiyya Apex AI jedhama. Barreeffaman, sagaleedhaan, suuraa ykn Web Search fayyadamuun gaaffii kee naaf dhiyeessuu dandeessa.</p>
-        </div>
-
-        <div class="options">
-            <label><input type="checkbox" id="useSearch" checked> Google/Web Search fayyadami</label>
-        </div>
-
-        <div class="input-group">
-            <input type="text" id="userInput" placeholder="Gaaffii kee asitti barreessi..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendChat()">Ergi</button>
-        </div>
-
-        <div class="upload-section">
-            <div>
-                <label>Suuraa Upload Godhi:</label><br>
-                <input type="file" id="imageInput" accept="image/*">
-                <button onclick="uploadImage()">Suuraa Xiinxali</button>
+            <div class="message ai">
+                <strong>Apex AI:</strong> Akkam! Maqaan kiyya Apex AI jedhama. Barreeffaman, sagaleedhaan, suuraa ykn Web Search fayyadamuun gaaffii kee naaf dhiyeessuu dandeessa. Har'a maaliin si gargaaruu?
             </div>
-            <div>
-                <label>Audio/Video Upload Godhi:</label><br>
-                <input type="file" id="mediaInput" accept="audio/*,video/*">
-                <button onclick="uploadMedia()">Sagalee/Video Dubbisi</button>
+        </div>
+
+        <div>
+            <div class="input-area-wrapper">
+                <div class="input-box">
+                    <textarea id="userInput" rows="1" placeholder="Gaaffii kee asitti barreessi..." onkeypress="handleKeyPress(event)"></textarea>
+                    <button class="send-btn" onclick="sendChat()">➔</button>
+                </div>
+                <div class="toolbar">
+                    <label><input type="checkbox" id="useSearch" checked> Google/Web Search fayyadami</label>
+                    <span style="font-size: 12px;">GPT-4o Engine</span>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         function handleKeyPress(e) {
-            if (e.key === 'Enter') sendChat();
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChat();
+            }
         }
 
         async function sendChat() {
             const input = document.getElementById('userInput');
             const chatBox = document.getElementById('chatBox');
             const useSearch = document.getElementById('useSearch').checked;
-            if(!input.value) return;
+            const prompt = input.value.trim();
+            
+            if(!prompt) return;
 
-            const prompt = input.value;
-            chatBox.innerHTML += `<p><strong>Ati:</strong> ${prompt}</p>`;
+            // User Message Appending
+            chatBox.innerHTML += `<div class="message user">${prompt}</div>`;
             input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Loading indicator
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `<div class="message ai" id="${loadingId}"><em>Apex AI yaadaa jira...</em></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
 
             const formData = new FormData();
             formData.append('prompt', prompt);
             formData.append('use_search', useSearch);
 
-            const res = await fetch('/api/chat', { method: 'POST', body: formData });
-            const data = await res.json();
-            
-            if(data.status === 'success') {
-                chatBox.innerHTML += `<p><strong>Apex AI:</strong> ${data.response}</p>`;
+            try {
+                const res = await fetch('/api/chat', { method: 'POST', body: formData });
+                const data = await res.json();
                 
-                // Sagalee deebii taphachiisuu (Play Audio TTS)
-                if(data.audio) {
-                    const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
-                    audio.play();
+                const loadingElement = document.getElementById(loadingId);
+                if(loadingElement) loadingElement.remove();
+
+                if(data.status === 'success') {
+                    chatBox.innerHTML += `<div class="message ai"><strong>Apex AI:</strong> ${data.response}</div>`;
+                    
+                    if(data.audio) {
+                        const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
+                        audio.play();
+                    }
+                } else {
+                    chatBox.innerHTML += `<div class="message ai" style="color: #ff6b6b;"><strong>Dogoggora:</strong> ${data.message}</div>`;
                 }
-                
-                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (err) {
+                const loadingElement = document.getElementById(loadingId);
+                if(loadingElement) loadingElement.remove();
+                chatBox.innerHTML += `<div class="message ai" style="color: #ff6b6b;"><strong>Dogoggora Server:</strong> Walqunnamtiirratti rakkoon uumameera.</div>`;
             }
-        }
-
-        async function uploadImage() {
-            const fileInput = document.getElementById('imageInput');
-            const chatBox = document.getElementById('chatBox');
-            if(!fileInput.files[0]) return;
-
-            chatBox.innerHTML += `<p><em>Suuraa upload gochaa jirta...</em></p>`;
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            const res = await fetch('/api/vision', { method: 'POST', body: formData });
-            const data = await res.json();
             
-            if(data.status === 'success') {
-                chatBox.innerHTML += `<p><strong>Apex AI (Vision):</strong> ${data.response}</p>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        }
-
-        async function uploadMedia() {
-            const fileInput = document.getElementById('mediaInput');
-            const chatBox = document.getElementById('chatBox');
-            if(!fileInput.files[0]) return;
-
-            chatBox.innerHTML += `<p><em>Media (Audio/Video) dubbisaa jira...</em></p>`;
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
-            const data = await res.json();
-            
-            if(data.status === 'success') {
-                chatBox.innerHTML += `<p><strong>Apex AI (Transcription):</strong> ${data.transcript}</p>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
 </body>
