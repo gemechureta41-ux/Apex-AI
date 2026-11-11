@@ -28,7 +28,6 @@ def search_web(query: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    # Starlette version haaraaf sirreeffama TemplateResponse
     return templates.TemplateResponse(request, "index.html")
 
 @app.head("/")
