@@ -10,13 +10,12 @@ app = FastAPI(title="Apex AI Full Platform")
 templates = Jinja2Templates(directory="templates")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 SYSTEM_PROMPT = (
     "Maqaan kee Apex AI jedhama. Ati gargaaraa AI dandeettii ol'aanaa qabu, "
     "afaanota addunyaa fi Afaan Oromoo guutummaatti hubatu, barreeffama, sagalee, "
-    "suuraa fi vidiyoo xiinxalee deebii sirrii fi qulqullina qabu kennuudha. "
-    "Yeroo odeeffannoo yeroo ammaa barbaachisu, ragaalee dhihaatan fayyadamuun deebisi."
+    "suuraa fi vidiyoo xiinxalee deebii sirrii fi qulqullina qabu kennuudha."
 )
 
 def search_web(query: str):
@@ -31,9 +30,11 @@ def search_web(query: str):
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-# 1. Chat with Web Search & Text-to-Speech Generation
 @app.post("/api/chat")
 async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False)):
+    if not OPENAI_API_KEY:
+        return JSONResponse({"status": "error", "message": "OPENAI_API_KEY Render irratti hin konfiguramne!"}, status_code=500)
+    
     try:
         context = ""
         if use_search:
@@ -54,7 +55,7 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
         
         reply_text = response.choices[0].message.content
 
-        # Text-to-Speech (TTS): Deebii barreeffamaa gara Sagaleetti jijjiiruu
+        # Text-to-Speech Generation
         speech_response = client.audio.speech.create(
             model="tts-1",
             voice="alloy",
@@ -68,50 +69,5 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
             "audio": audio_base64
         })
     except Exception as e:
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
-
-# 2. Vision (Image Processing) API
-@app.post("/api/vision")
-async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file: UploadFile = File(...)):
-    try:
-        contents = await file.read()
-        base64_image = base64.b64encode(contents).decode('utf-8')
-        
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-                        }
-                    ]
-                }
-            ]
-        )
-        return JSONResponse({"status": "success", "response": response.choices[0].message.content})
-    except Exception as e:
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
-
-# 3. Audio Transcribe (Speech-to-Text) API
-@app.post("/api/transcribe")
-async def transcribe_endpoint(file: UploadFile = File(...)):
-    try:
-        temp_filename = f"temp_{file.filename}"
-        with open(temp_filename, "wb") as f:
-            f.write(await file.read())
-            
-        with open(temp_filename, "rb") as audio_file:
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file
-            )
-            
-        os.remove(temp_filename)
-        return JSONResponse({"status": "success", "transcript": transcript.text})
-    except Exception as e:
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+        # Error sirriitti print gochuuf akka Internal Server Error qofti hin baane
+        return JSONResponse({"status": "error", "message": f"Server Error: {str(e)}"}, status_code=500)
