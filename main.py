@@ -49,8 +49,8 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Direct Google Gemini REST API (gemini-1.5-flash) - Ultra Fast & Stable
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        # Direct Google Gemini REST API (gemini-pro) - 100% Stable
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{
@@ -93,7 +93,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
         contents = await file.read()
         image_base64 = base64.b64encode(contents).decode('utf-8')
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{
