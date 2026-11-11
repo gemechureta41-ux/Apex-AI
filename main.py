@@ -11,7 +11,6 @@ import io
 app = FastAPI(title="Apex AI Gemini Platform")
 templates = Jinja2Templates(directory="templates")
 
-# Google Gemini API Key
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
@@ -51,9 +50,9 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Google Gemini Model (gemini-2.5-flash) - Fast & Free
+        # Google Gemini Model (gemini-3.8-flash)
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             contents=full_prompt,
         )
         
@@ -81,7 +80,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
         contents = await file.read()
         
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             contents=[
                 prompt,
                 {"mime_type": file.content_type, "data": contents}
