@@ -51,8 +51,8 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Gemini Flash Model - Ultra Fast & Stable
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Gemini Pro Model - 100% Stable & Fast
+        model = genai.GenerativeModel('gemini-pro')
         response = model.generate_content(full_prompt)
         
         reply_text = response.text
@@ -81,7 +81,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
         return JSONResponse({"status": "error", "message": "GEMINI_API_KEY hin argamne!"}, status_code=500)
     try:
         contents = await file.read()
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-pro')
         response = model.generate_content([
             prompt,
             {"mime_type": file.content_type, "data": contents}
