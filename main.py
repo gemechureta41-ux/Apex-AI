@@ -3,7 +3,7 @@ import base64
 from fastapi import FastAPI, Request, File, UploadFile, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from google import genai
+import google.generativeai as genai
 from duckduckgo_search import DDGS
 from gtts import gTTS
 import io
@@ -12,7 +12,8 @@ app = FastAPI(title="Apex AI Ultra Fast")
 templates = Jinja2Templates(directory="templates")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 SYSTEM_PROMPT = (
     "Maqaan kee Apex AI jedhama. Ati gargaaraa AI dandeettii ol'aanaa qabu, "
@@ -38,7 +39,7 @@ async def head_root():
 
 @app.post("/api/chat")
 async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False)):
-    if not client:
+    if not GEMINI_API_KEY:
         return JSONResponse({"status": "error", "message": "GEMINI_API_KEY Render Environment Variables irratti hin jiru!"}, status_code=500)
     
     try:
@@ -50,11 +51,9 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Modelii sirrii fi saffisa qabu (gemini-1.5-flash)
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=full_prompt,
-        )
+        # Gemini Flash Model - Ultra Fast & Stable
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(full_prompt)
         
         reply_text = response.text
 
@@ -78,17 +77,15 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
 @app.post("/api/vision")
 async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file: UploadFile = File(...)):
-    if not client:
+    if not GEMINI_API_KEY:
         return JSONResponse({"status": "error", "message": "GEMINI_API_KEY hin argamne!"}, status_code=500)
     try:
         contents = await file.read()
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=[
-                prompt,
-                {"mime_type": file.content_type, "data": contents}
-            ]
-        )
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content([
+            prompt,
+            {"mime_type": file.content_type, "data": contents}
+        ])
         return JSONResponse({"status": "success", "response": response.text})
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
