@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from google import genai
 from duckduckgo_search import DDGS
 
-app = FastAPI(title="Apex AI Multilingual Platform")
+app = FastAPI(title="Apex AI Ultra Fast")
 templates = Jinja2Templates(directory="templates")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -15,13 +15,13 @@ SYSTEM_PROMPT = (
     "Your name is Apex AI. You are an advanced AI assistant capable of understanding all world languages "
     "including Afaan Oromoo. You must reply to the user in the exact language the user used to ask the question "
     "(e.g., if the user asks in Afaan Oromoo, reply in fluent Afaan Oromoo; if in English, reply in English, etc.). "
-    "Provide accurate, helpful, and ultra-fast responses like Google Gemini."
+    "Provide accurate, helpful, and ultra-fast responses instantly."
 )
 
 def search_web(query: str):
     try:
         with DDGS() as ddgs:
-            results = [r['body'] for r in ddgs.text(query, max_results=3)]
+            results = [r['body'] for r in ddgs.text(query, max_results=2)]
             return " ".join(results)
     except Exception:
         return ""
