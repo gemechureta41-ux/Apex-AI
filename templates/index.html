@@ -1,250 +1,131 @@
 <!DOCTYPE html>
-<html lang="om">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex AI - Dashboard</title>
+    <title>Apex AI - Smart Assistant</title>
     <style>
-        :root {
-            --bg-color: #131314;
-            --sidebar-color: #1e1f20;
-            --chat-bg: #1e1f20;
-            --input-bg: #282a2c;
-            --text-color: #e3e3e3;
-            --accent-color: #c4c7c5;
-            --gold-color: #d4af37;
-        }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-        /* Sidebar styling ala Gemini */
-        .sidebar {
-            width: 260px;
-            background-color: var(--sidebar-color);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            border-right: 1px solid #333;
-        }
-        .sidebar h2 {
-            color: var(--gold-color);
-            font-size: 22px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .new-chat-btn {
-            background: #282a2c;
-            color: var(--text-color);
-            border: 1px solid #444;
-            padding: 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-align: left;
-            transition: 0.2s;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: #1e1f20; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid #2d2e30; transition: 0.3s; }
+        .new-chat-btn { background: #282a2c; color: #e3e3e3; border: none; padding: 12px 16px; border-radius: 24px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; transition: 0.2s; }
         .new-chat-btn:hover { background: #3c4043; }
-
+        
         /* Main Chat Area */
-        .main-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100vh;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
+        .main-container { flex: 1; display: flex; flex-direction: column; height: 100vh; position: relative; }
+        .chat-header { padding: 15px 25px; font-size: 18px; font-weight: 600; border-bottom: 1px solid #2d2e30; background: #131314; display: flex; justify-content: space-between; align-items: center; }
+        
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; max-width: 900px; width: 100%; margin: 0 auto; }
+        .message { display: flex; gap: 15px; max-width: 80%; line-height: 1.6; font-size: 15px; }
+        .message.user { align-self: flex-end; background: #282a2c; padding: 12px 18px; border-radius: 18px 18px 4px 18px; }
+        .message.ai { align-self: flex-start; background: transparent; padding: 10px 0; }
+        
+        /* Input Area */
+        .input-container { padding: 20px; max-width: 900px; width: 100%; margin: 0 auto; background: #131314; }
+        .input-box { background: #1e1f20; border-radius: 28px; padding: 10px 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #3c4043; }
+        .input-box input { flex: 1; background: transparent; border: none; color: #fff; font-size: 16px; outline: none; padding: 8px 0; }
+        .send-btn { background: #c4eed0; color: #1f1f1f; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.2s; }
+        .send-btn:hover { background: #a8f2bd; }
+        
+        .options { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 13px; color: #aaa; }
+        
+        /* Responsive for Mobile */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .message { max-width: 95%; }
         }
-        .chat-header {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--gold-color);
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .chat-box {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            scroll-behavior: smooth;
-        }
-        .message {
-            padding: 15px 20px;
-            border-radius: 18px;
-            max-width: 80%;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-        .message.user {
-            background-color: #2b2d31;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-        .message.ai {
-            background-color: var(--chat-bg);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            border: 1px solid #333;
-        }
-        .message.ai strong { color: var(--gold-color); }
-
-        /* Input Area ala Gemini */
-        .input-area-wrapper {
-            background-color: var(--input-bg);
-            border-radius: 28px;
-            padding: 12px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            border: 1px solid #444;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            margin-bottom: 15px;
-        }
-        .input-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        textarea {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-color);
-            font-size: 16px;
-            resize: none;
-            outline: none;
-            max-height: 120px;
-            padding-top: 6px;
-        }
-        .send-btn {
-            background: var(--gold-color);
-            color: #000;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
-        .send-btn:hover { background: #f3c623; }
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            color: var(--accent-color);
-            border-top: 1px solid #333;
-            padding-top: 8px;
-        }
-        .toolbar label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
     <div class="sidebar">
-        <h2>APEX AI</h2>
-        <button class="new-chat-btn" onclick="location.reload()">+ Marii Haaraa</button>
-        <div style="font-size: 13px; color: #888; margin-top: auto;">
-            <p><strong>Version:</strong> 2.0 Pro</p>
-            <p><strong>Developer:</strong> Gemechu Reta</p>
+        <button class="new-chat-btn" onclick="location.reload()">+ New Chat</button>
+        <div style="margin-top: auto; font-size: 12px; color: #888;">
+            <p>Version: 3.0 Pro</p>
+            <p>Developer: Gemechu Reta</p>
         </div>
     </div>
 
-    <!-- Main Container -->
     <div class="main-container">
-        <div class="chat-header">Apex AI Web Dashboard</div>
-        
-        <div class="chat-box" id="chatBox">
+        <div class="chat-header">
+            <span>Apex AI Web Dashboard</span>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
             <div class="message ai">
-                <strong>Apex AI:</strong> Akkam! Maqaan kiyya Apex AI jedhama. Barreeffaman, sagaleedhaan, suuraa ykn Web Search fayyadamuun gaaffii kee naaf dhiyeessuu dandeessa. Har'a maaliin si gargaaruu?
+                <strong>Apex AI:</strong> Hello! My name is Apex AI. I can understand all world languages and Afaan Oromoo fully, reply in whatever language you ask, and assist you with text, images, or web search. How can I help you today?
             </div>
         </div>
 
-        <div>
-            <div class="input-area-wrapper">
-                <div class="input-box">
-                    <textarea id="userInput" rows="1" placeholder="Gaaffii kee asitti barreessi..." onkeypress="handleKeyPress(event)"></textarea>
-                    <button class="send-btn" onclick="sendChat()">➔</button>
-                </div>
-                <div class="toolbar">
-                    <label><input type="checkbox" id="useSearch" checked> Google/Web Search fayyadami</label>
-                    <span style="font-size: 12px;">GPT-4o Engine</span>
-                </div>
+        <div class="input-container">
+            <div class="input-box">
+                <input type="text" id="userInput" placeholder="Ask anything in any language..." onkeypress="handleKeyPress(event)">
+                <button class="send-btn" onclick="sendMessage()">➔</button>
+            </div>
+            <div class="options">
+                <label><input type="checkbox" id="useSearch" checked> Enable Google/Web Search</label>
             </div>
         </div>
     </div>
 
     <script>
-        function handleKeyPress(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendChat();
+        async function sendMessage() {
+            const inputField = document.getElementById('userInput');
+            const prompt = inputField.value.trim();
+            const useSearch = document.getElementById('useSearch').checked;
+            const messagesContainer = document.getElementById('chatMessages');
+
+            if (!prompt) return;
+
+            // User Message
+            messagesContainer.innerHTML += `<div class="message user">${escapeHtml(prompt)}</div>`;
+            inputField.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Loading message
+            const loadingId = 'loading-' + Date.now();
+            messagesContainer.innerHTML += `<div class="message ai" id="${loadingId}"><strong>Apex AI:</strong> Thinking...</div>`;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            try {
+                const formData = new FormData();
+                formData.append('prompt', prompt);
+                formData.append('use_search', useSearch);
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+
+                if (data.status === 'success') {
+                    messagesContainer.innerHTML += `<div class="message ai"><strong>Apex AI:</strong> ${formatText(data.response)}</div>`;
+                } else {
+                    messagesContainer.innerHTML += `<div class="message ai" style="color: #ff8b8b;"><strong>Error:</strong> ${data.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById(loadingId).remove();
+                messagesContainer.innerHTML += `<div class="message ai" style="color: #ff8b8b;"><strong>Error:</strong> Connection failed.</div>`;
+            }
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
             }
         }
 
-        async function sendChat() {
-            const input = document.getElementById('userInput');
-            const chatBox = document.getElementById('chatBox');
-            const useSearch = document.getElementById('useSearch').checked;
-            const prompt = input.value.trim();
-            
-            if(!prompt) return;
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
 
-            // User Message Appending
-            chatBox.innerHTML += `<div class="message user">${prompt}</div>`;
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            // Loading indicator
-            const loadingId = 'loading-' + Date.now();
-            chatBox.innerHTML += `<div class="message ai" id="${loadingId}"><em>Apex AI yaadaa jira...</em></div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            const formData = new FormData();
-            formData.append('prompt', prompt);
-            formData.append('use_search', useSearch);
-
-            try {
-                const res = await fetch('/api/chat', { method: 'POST', body: formData });
-                const data = await res.json();
-                
-                const loadingElement = document.getElementById(loadingId);
-                if(loadingElement) loadingElement.remove();
-
-                if(data.status === 'success') {
-                    chatBox.innerHTML += `<div class="message ai"><strong>Apex AI:</strong> ${data.response}</div>`;
-                    
-                    if(data.audio) {
-                        const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
-                        audio.play();
-                    }
-                } else {
-                    chatBox.innerHTML += `<div class="message ai" style="color: #ff6b6b;"><strong>Dogoggora:</strong> ${data.message}</div>`;
-                }
-            } catch (err) {
-                const loadingElement = document.getElementById(loadingId);
-                if(loadingElement) loadingElement.remove();
-                chatBox.innerHTML += `<div class="message ai" style="color: #ff6b6b;"><strong>Dogoggora Server:</strong> Walqunnamtiirratti rakkoon uumameera.</div>`;
-            }
-            
-            chatBox.scrollTop = chatBox.scrollHeight;
+        function formatText(text) {
+            return text.replace(/\n/g, '<br>');
         }
     </script>
 </body>
