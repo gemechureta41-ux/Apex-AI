@@ -50,9 +50,9 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = prompt + context
 
-        # Groq Model Asii jijjiirameera (llama-3.3-70b-versatile)
+        # Groq Stable Free Model (llama-3.1-8b-instant)
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": full_prompt}
