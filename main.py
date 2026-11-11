@@ -49,7 +49,7 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Direct Google Gemini REST API (gemini-1.5-flash-latest) - 100% Stable & Fast
+        # Direct Google Gemini REST API (gemini-1.5-flash) - Ultra Fast & Stable
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
         payload = {
