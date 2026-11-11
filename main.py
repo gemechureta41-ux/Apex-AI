@@ -8,7 +8,7 @@ from duckduckgo_search import DDGS
 from gtts import gTTS
 import io
 
-app = FastAPI(title="Apex AI Direct Gemini 100%")
+app = FastAPI(title="Apex AI Direct Gemini")
 templates = Jinja2Templates(directory="templates")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -49,8 +49,8 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Direct Google Gemini REST API - gemini-1.5-flash-latest (100% Stable)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+        # URL sirrii - gemini-1.5-flash wajjin (v1 endpoint)
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{
@@ -93,7 +93,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
         contents = await file.read()
         image_base64 = base64.b64encode(contents).decode('utf-8')
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{
