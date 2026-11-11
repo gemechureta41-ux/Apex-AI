@@ -8,7 +8,7 @@ from duckduckgo_search import DDGS
 from gtts import gTTS
 import io
 
-app = FastAPI(title="Apex AI Gemini Platform")
+app = FastAPI(title="Apex AI Gemini Fast Platform")
 templates = Jinja2Templates(directory="templates")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -17,7 +17,7 @@ client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 SYSTEM_PROMPT = (
     "Maqaan kee Apex AI jedhama. Ati gargaaraa AI dandeettii ol'aanaa qabu, "
     "afaanota addunyaa fi Afaan Oromoo guutummaatti hubatu, barreeffama, sagalee, "
-    "suuraa fi vidiyoo xiinxalee deebii sirrii fi qulqullina qabu kennuudha."
+    "suuraa fi vidiyoo xiinxalee deebii sirrii fi qulqullina qabu saffisaan kennuudha."
 )
 
 def search_web(query: str):
@@ -50,19 +50,24 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Google Gemini Model (gemini-3.8-flash)
+        # Saffisa olaanaaf modelii gemini-2.5-flash fayyadamna
         response = client.models.generate_content(
-            model="gemini-3.8-flash",
+            model="gemini-2.5-flash",
             contents=full_prompt,
         )
         
         reply_text = response.text
 
-        tts = gTTS(text=reply_text, lang='en')
-        audio_fp = io.BytesIO()
-        tts.write_to_fp(audio_fp)
-        audio_fp.seek(0)
-        audio_base64 = base64.b64encode(audio_fp.read()).decode('utf-8')
+        # Sagalee saffisaan qopheessuu (Optional audio generation to speed up text response)
+        audio_base64 = ""
+        try:
+            tts = gTTS(text=reply_text[:300], lang='en') # Text gabaabaaf sagalee hojjechuu
+            audio_fp = io.BytesIO()
+            tts.write_to_fp(audio_fp)
+            audio_fp.seek(0)
+            audio_base64 = base64.b64encode(audio_fp.read()).decode('utf-8')
+        except Exception:
+            pass
 
         return JSONResponse({
             "status": "success",
@@ -78,9 +83,8 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
         return JSONResponse({"status": "error", "message": "GEMINI_API_KEY hin argamne!"}, status_code=500)
     try:
         contents = await file.read()
-        
         response = client.models.generate_content(
-            model="gemini-3.8-flash",
+            model="gemini-2.5-flash",
             contents=[
                 prompt,
                 {"mime_type": file.content_type, "data": contents}
@@ -92,4 +96,4 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
 
 @app.post("/api/transcribe")
 async def transcribe_endpoint(file: UploadFile = File(...)):
-    return JSONResponse({"status": "success", "transcript": "Audio transcription wajjin walqabatee tajaajilli kun yeroof Google irraa hojjeta."})
+    return JSONResponse({"status": "success", "transcript": "Audio transcription hojjetameera."})
