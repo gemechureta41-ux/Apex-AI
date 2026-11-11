@@ -3,14 +3,16 @@ import base64
 from fastapi import FastAPI, Request, File, UploadFile, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from openai import OpenAI
+from groq import Groq
 from duckduckgo_search import DDGS
+from gtts import gTTS
+import io
 
-app = FastAPI(title="Apex AI Full Platform")
+app = FastAPI(title="Apex AI Free Platform")
 templates = Jinja2Templates(directory="templates")
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 SYSTEM_PROMPT = (
     "Maqaan kee Apex AI jedhama. Ati gargaaraa AI dandeettii ol'aanaa qabu, "
@@ -37,7 +39,7 @@ async def head_root():
 @app.post("/api/chat")
 async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False)):
     if not client:
-        return JSONResponse({"status": "error", "message": "OPENAI_API_KEY Render Environment Variables irratti hin jiru!"}, status_code=500)
+        return JSONResponse({"status": "error", "message": "GROQ_API_KEY Render Environment Variables irratti hin jiru!"}, status_code=500)
     
     try:
         context = ""
@@ -48,8 +50,9 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = prompt + context
 
+        # Groq Llama 3.1 Model (Free & Fast)
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": full_prompt}
@@ -59,12 +62,12 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
         
         reply_text = response.choices[0].message.content
 
-        speech_response = client.audio.speech.create(
-            model="tts-1",
-            voice="alloy",
-            input=reply_text
-        )
-        audio_base64 = base64.b64encode(speech_response.content).decode('utf-8')
+        # Free Text-to-Speech using gTTS
+        tts = gTTS(text=reply_text, lang='en')
+        audio_fp = io.BytesIO()
+        tts.write_to_fp(audio_fp)
+        audio_fp.seek(0)
+        audio_base64 = base64.b64encode(audio_fp.read()).decode('utf-8')
 
         return JSONResponse({
             "status": "success",
@@ -77,13 +80,14 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 @app.post("/api/vision")
 async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file: UploadFile = File(...)):
     if not client:
-        return JSONResponse({"status": "error", "message": "OPENAI_API_KEY hin argamne!"}, status_code=500)
+        return JSONResponse({"status": "error", "message": "GROQ_API_KEY hin argamne!"}, status_code=500)
     try:
         contents = await file.read()
         base64_image = base64.b64encode(contents).decode('utf-8')
         
+        # Groq Vision Model (Llama 3.2 Vision)
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="llama-3.2-11b-vision-preview",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {
@@ -105,7 +109,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
 @app.post("/api/transcribe")
 async def transcribe_endpoint(file: UploadFile = File(...)):
     if not client:
-        return JSONResponse({"status": "error", "message": "OPENAI_API_KEY hin argamne!"}, status_code=500)
+        return JSONResponse({"status": "error", "message": "GROQ_API_KEY hin argamne!"}, status_code=500)
     try:
         temp_filename = f"temp_{file.filename}"
         with open(temp_filename, "wb") as f:
@@ -113,7 +117,7 @@ async def transcribe_endpoint(file: UploadFile = File(...)):
             
         with open(temp_filename, "rb") as audio_file:
             transcript = client.audio.transcriptions.create(
-                model="whisper-1",
+                model="whisper-large-v3-turbo",
                 file=audio_file
             )
             
