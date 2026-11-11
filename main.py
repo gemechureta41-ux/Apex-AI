@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from google import genai
 from duckduckgo_search import DDGS
 
-app = FastAPI(title="Apex AI Ultra Fast")
+app = FastAPI(title="Apex AI Lightning Fast")
 templates = Jinja2Templates(directory="templates")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -15,16 +15,8 @@ SYSTEM_PROMPT = (
     "Your name is Apex AI. You are an advanced AI assistant capable of understanding all world languages "
     "including Afaan Oromoo. You must reply to the user in the exact language the user used to ask the question "
     "(e.g., if the user asks in Afaan Oromoo, reply in fluent Afaan Oromoo; if in English, reply in English, etc.). "
-    "Provide accurate, helpful, and ultra-fast responses instantly."
+    "Provide accurate, helpful, and lightning-fast responses instantly."
 )
-
-def search_web(query: str):
-    try:
-        with DDGS() as ddgs:
-            results = [r['body'] for r in ddgs.text(query, max_results=2)]
-            return " ".join(results)
-    except Exception:
-        return ""
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -42,11 +34,15 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
     try:
         context = ""
         if use_search:
-            search_results = search_web(prompt)
-            if search_results:
-                context = f"\n\nWeb Search Context:\n{search_results}"
+            try:
+                with DDGS() as ddgs:
+                    results = [r['body'] for r in ddgs.text(prompt, max_results=1)]
+                    if results:
+                        context = f"\n\nContext: {results[0]}"
+            except Exception:
+                pass
 
-        full_prompt = f"{SYSTEM_PROMPT}\n\nUser Question: {prompt} {context}"
+        full_prompt = f"{SYSTEM_PROMPT}\n\nUser: {prompt} {context}"
 
         response = client.models.generate_content(
             model='gemini-3.8-flash',
