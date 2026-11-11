@@ -47,15 +47,13 @@ async def chat_endpoint(prompt: str = Form(...), use_search: bool = Form(False))
 
         full_prompt = f"{SYSTEM_PROMPT}\n\nGaaffii Fayyadamaa: {prompt} {context}"
 
-        # Google Gemini Model - gemini-3.8-flash (Ultra Fast Response)
         response = client.models.generate_content(
-            model='gemini-3.8-flash',
+            model='gemini-2.5-flash',
             contents=full_prompt,
         )
         
         reply_text = response.text
 
-        # Audio baasuu dhiisuun saffisa dhibbeentaa 100tti oolchuu (Instant Response)
         return JSONResponse({
             "status": "success",
             "response": reply_text,
@@ -71,7 +69,7 @@ async def vision_endpoint(prompt: str = Form("Suuraa kana naaf xiinxali"), file:
     try:
         contents = await file.read()
         response = client.models.generate_content(
-            model='gemini-3.8-flash',
+            model='gemini-2.5-flash',
             contents=[
                 prompt,
                 {"mime_type": file.content_type, "data": contents}
